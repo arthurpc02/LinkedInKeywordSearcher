@@ -24,15 +24,41 @@ STOPWORDS = {
     "then", "there", "these", "they", "this", "those", "through", "to", "too", "under",
     "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while",
     "who", "whom", "why", "will", "with", "you", "your", "yours", "yourself", "yourselves",
+    "s", "re", "ve", "ll", "d", "m", "t", "eg", "etc",
 }
+
+TOKEN_RE = re.compile(r"[a-zA-Z]+(?:'[a-zA-Z]+)*")
+MIN_TOKEN_LENGTH = 2
+
+
+def normalize_token(token: str) -> str:
+    """Normalize token for counting by handling casing and apostrophe artifacts."""
+    normalized = token.lower().strip("'")
+    if normalized.endswith("'s"):
+        normalized = normalized[:-2]
+    return normalized.strip("'")
 
 
 def extract_top_keywords(text: str, limit: int = 200) -> List[Tuple[str, int]]:
     """Return the top keywords and counts, sorted descending by frequency."""
-    words = re.findall(r"[a-zA-Z]+", text.lower())
-    filtered = [w for w in words if w not in STOPWORDS]
+    words = TOKEN_RE.findall(text)
+    normalized_words = (normalize_token(word) for word in words)
+    filtered = [
+        token
+        for token in normalized_words
+        if len(token) >= MIN_TOKEN_LENGTH and token not in STOPWORDS
+    ]
     counts = Counter(filtered)
     return counts.most_common(limit)
+
+
+def tokenizer_sanity_check() -> bool:
+    """Deterministic check for apostrophe handling and abbreviation artifacts."""
+    sample = "friend's you're e.g. don't"
+    extracted = {keyword for keyword, _ in extract_top_keywords(sample, limit=20)}
+    required = {"friend", "you're", "don't"}
+    excluded = {"s", "re", "e", "g"}
+    return required.issubset(extracted) and excluded.isdisjoint(extracted)
 
 
 @app.route("/", methods=["GET", "POST"])
