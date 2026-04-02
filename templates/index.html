@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkedIn Keyword Searcher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>LinkedIn Keyword Searcher</h1>
+      <p>
+        Paste job descriptions below to find the 200 most used keywords for your LinkedIn profile.
+      </p>
+
+      <form method="post" action="/" class="form-card">
+        <label for="job_text">Job descriptions</label>
+        <textarea
+          id="job_text"
+          name="job_text"
+          rows="14"
+          placeholder="Paste one or multiple job descriptions here..."
+          required
+        >{{ text_input }}</textarea>
+
+        <button type="submit">Analyze Keywords</button>
+      </form>
+
+      {% if keywords %}
+      <section class="results">
+        <h2>Top {{ keywords|length }} Keywords</h2>
+
+        <form method="post" action="/export-csv" class="csv-form">
+          <input type="hidden" name="job_text" value="{{ text_input }}" />
+          <button type="submit">Export CSV</button>
+        </form>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Keyword</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for word, count in keywords %}
+            <tr>
+              <td>{{ word }}</td>
+              <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+    </main>
+  </body>
+</html>
